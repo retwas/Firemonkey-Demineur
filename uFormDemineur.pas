@@ -75,16 +75,20 @@ end;
 
 procedure TFormDemineur.FormCreate(Sender: TObject);
 begin
+   FDemineur          := nil;
    RectButton.Visible := True;
 end;
 
 procedure TFormDemineur.FormShow(Sender: TObject);
 begin
-   FDemineur              := TDemineur.Create(Self, GridLayout);
+   if not Assigned(FDemineur) then
+   begin
+      FDemineur              := TDemineur.Create(Self, GridLayout);
 
-   FDemineur.OnGameAction := GetActionGame;
-   FDemineur.OnGetMine    := GetMine;
-   FDemineur.OnGetTimer   := GetTimer;
+      FDemineur.OnGameAction := GetActionGame;
+      FDemineur.OnGetMine    := GetMine;
+      FDemineur.OnGetTimer   := GetTimer;
+   end;
 end;
 
 procedure TFormDemineur.GetActionGame(GameAction : TGameAction);
