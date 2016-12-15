@@ -233,8 +233,8 @@ begin
 
    // initialisation de la grille
    FGridLayout            := GridLayout;
-   FGridLayout.ItemHeight := CST_WIDTH_BUTTON;
    FGridLayout.ItemWidth  := CST_WIDTH_BUTTON;
+   FGridLayout.ItemHeight := CST_WIDTH_BUTTON;
 
    // par défaut le jeu est en mode "facile"
    FLevel          := lvEasy;
@@ -278,6 +278,14 @@ var
    mbButton : TMineButton;
 begin
    FListMineButton.Clear;
+
+   {$IFDEF MSWINDOWS}
+      //
+   {$ELSE}
+      FiHeight := Trunc((Screen.Height - 40) div CST_WIDTH_BUTTON) - 1;
+      FiWidth  := Trunc(Screen.Width div CST_WIDTH_BUTTON);
+   {$ENDIF}
+
    // création des boutons
    for iHeight := 0 to FiHeight - 1 do
    begin
@@ -305,8 +313,10 @@ begin
    // initialisation des mines
    AddMines;
 
-   // on ajuste la taille de la fenêtre au nombre de boutons
-   AdjustFormSize;
+   {$IFDEF MSWINDOWS}
+      // on ajuste la taille de la fenêtre au nombre de boutons
+      AdjustFormSize;
+   {$ENDIF}
 
    FTimer.Enabled := True;
 end;
@@ -334,13 +344,13 @@ begin
       lvMiddle:
       begin
          FiWidth  := 12;
-         FiHeight := 14;
+         FiHeight := 16;
          FiMines  := 25;
       end;
       lvHard:
       begin
-         FiWidth  := 15;
-         FiHeight := 18;
+         FiWidth  := 16;
+         FiHeight := 22;
          FiMines  := 45;
       end;
    end;
