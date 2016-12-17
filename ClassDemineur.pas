@@ -279,9 +279,8 @@ var
 begin
    FListMineButton.Clear;
 
-   {$IFDEF MSWINDOWS}
-      //
-   {$ELSE}
+   // sur téléphone c'est juste le nombre de mine qui change
+   {$IFDEF ANDROID}
       FiHeight := Trunc((Screen.Height - 40) div CST_WIDTH_BUTTON) - 1;
       FiWidth  := Trunc(Screen.Width div CST_WIDTH_BUTTON);
    {$ENDIF}

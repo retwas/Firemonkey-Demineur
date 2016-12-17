@@ -6,7 +6,8 @@ uses
   System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Layouts, ClassDemineur,
   FMX.StdCtrls, FMX.Controls.Presentation, System.ImageList, FMX.ImgList,
-  FMX.Objects, FMX.Styles.Objects, FMX.Ani, FMX.Menus;
+  FMX.Objects, FMX.Styles.Objects, FMX.Ani, FMX.Menus, System.Actions,
+  FMX.ActnList;
 
 type
   TFormDemineur = class(TForm)
@@ -26,11 +27,14 @@ type
     faLayoutOptions: TFloatAnimation;
     MainMenu: TMainMenu;
     miNewGame: TMenuItem;
+    ActionList: TActionList;
+    aNouvellePartie: TAction;
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure FormShow(Sender: TObject);
     procedure btnEasyClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure miNewGameClick(Sender: TObject);
+    procedure aNouvellePartieExecute(Sender: TObject);
+    procedure aNouvellePartieUpdate(Sender: TObject);
   private
     FDemineur : TDemineur;
 
@@ -50,6 +54,16 @@ uses
    System.DateUtils;
 
 {$R *.fmx}
+
+procedure TFormDemineur.aNouvellePartieExecute(Sender: TObject);
+begin
+   FDemineur.Stop(gaNewParty);
+end;
+
+procedure TFormDemineur.aNouvellePartieUpdate(Sender: TObject);
+begin
+   aNouvellePartie.Enabled := Assigned(FDemineur);
+end;
 
 procedure TFormDemineur.btnEasyClick(Sender: TObject);
 begin
@@ -119,11 +133,6 @@ procedure TFormDemineur.GetTimer(iSecond : integer);
 begin
    // affichage du chronomètre
    TexteTimer.Text := iSecond.ToString;
-end;
-
-procedure TFormDemineur.miNewGameClick(Sender: TObject);
-begin
-   FDemineur.Stop(gaNewParty);
 end;
 
 end.
