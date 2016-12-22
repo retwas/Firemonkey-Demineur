@@ -44,7 +44,7 @@ type
 
    TDemineur = class
    const
-      CST_WIDTH_BUTTON = 40;
+      CST_WIDTH_BUTTON = 35;
    strict private
       FGridLayout     : TGridLayout;
       FLevel          : TLevel;
@@ -56,6 +56,7 @@ type
       FListColors     : TList<Cardinal>;
       FTimer          : TTimer;
       FiTimerExec     : integer;
+      FbLongTap       : boolean;
       FOnGameAction   : TOnGameAction;
       FOnGetMine      : TOnGetValue;
       FOnGetTimer     : TOnGetValue;
@@ -74,6 +75,8 @@ type
       procedure OnRightMouseButtonClick(Sender : TObject);
       /// <summary>chronomètre lancé toutes les secondes</summary>
       procedure OnTimer(Sender : TObject);
+      /// <summary>pour ajouter des drapeaux pas clique long sur mobile</summary>
+      procedure OnMineButtonGesture(Sender: TObject; const EventInfo: TGestureEventInfo; var Handled: Boolean);
       /// <summary>chargement des couleurs disponible pour les chiffres</summary>
       procedure LoadListColors;
       /// <summary>place des mines aléatoirement</summary>
@@ -126,10 +129,17 @@ procedure TMineButton.SetFlag(const Value : boolean);
 begin
    if FbFlag <> Value then
    begin
-      if Value then
-         Self.StyleLookup := 'StyleFlagButton'
-      else
-         Self.StyleLookup := '';
+      {$IF Defined(ANDROID) or Defined(IOS)}
+         if Value then
+            Self.Text := 'F'
+         else
+            Self.StyleLookup := '';
+      {$ELSE}
+         if Value then
+            Self.StyleLookup := 'StyleFlagButton'
+         else
+            Self.StyleLookup := '';
+      {$ENDIF}
 
       FbFlag := Value;
    end;
@@ -255,6 +265,8 @@ begin
    FOnGameAction   := nil;
    FOnGetMine      := nil;
    FOnGetTimer     := nil;
+
+   FbLongTap       := False;
 end;
 
 procedure TDemineur.LoadListColors;
@@ -279,10 +291,13 @@ var
 begin
    FListMineButton.Clear;
 
-   // sur téléphone c'est juste le nombre de mine qui change
-   {$IFDEF ANDROID}
-      FiHeight := Trunc((Screen.Height - 40) div CST_WIDTH_BUTTON) - 1;
-      FiWidth  := Trunc(Screen.Width div CST_WIDTH_BUTTON);
+   // sur téléphone l'écran est rempli de bouton
+   {$IF Defined(ANDROID) or Defined(IOS)}
+      FiHeight := Trunc((FOwner.ClientHeight - 40) div CST_WIDTH_BUTTON);
+      FiWidth  := Trunc(FOwner.ClientWidth div CST_WIDTH_BUTTON);
+
+      // pour avoir la même marge à gauche et à droite
+      FGridLayout.Margins.Left := Trunc((FOwner.ClientWidth - (FiWidth * CST_WIDTH_BUTTON)) div 2);
    {$ENDIF}
 
    // création des boutons
@@ -298,8 +313,15 @@ begin
          mbButton.bFlag       := False;
          mbButton.Font.Size   := 15;
 
-         mbButton.iCol       := iWidth;
-         mbButton.iRow       := iHeight;
+         // toujours sur téléphone on remplace le clique droit
+         // par un appui prolongé sur le bouton
+         {$IF Defined(ANDROID) or Defined(IOS)}
+            mbButton.Touch.InteractiveGestures := [TInteractiveGesture.LongTap];
+            mbButton.OnGesture := OnMineButtonGesture;
+         {$ENDIF}
+
+         mbButton.iCol        := iWidth;
+         mbButton.iRow        := iHeight;
 
          mbButton.StyledSettings          := [TStyledSetting.Family];
          mbButton.TextSettings.Font.Style := mbButton.TextSettings.Font.Style + [TFontStyle.fsBold];
@@ -312,7 +334,7 @@ begin
    // initialisation des mines
    AddMines;
 
-   {$IFDEF MSWINDOWS}
+   {$IF Defined(MSWINDOWS) or Defined(MACOS)}
       // on ajuste la taille de la fenêtre au nombre de boutons
       AdjustFormSize;
    {$ENDIF}
@@ -409,13 +431,28 @@ begin
    end;
 end;
 
+procedure TDemineur.OnMineButtonGesture(Sender: TObject;
+  const EventInfo: TGestureEventInfo; var Handled: Boolean);
+begin
+   if EventInfo.GestureID = igiLongTap then
+   begin
+      FbLongTap := True;
+      OnRightMouseButtonClick(Sender);
+   end;
+end;
+
 procedure TDemineur.OnMineButtonMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
 begin
-   if Button = TMouseButton.mbLeft then
-      OnLeftMouseButtonClick(Sender)
+   if not FbLongTap then
+   begin
+      if Button = TMouseButton.mbLeft then
+         OnLeftMouseButtonClick(Sender)
 
-   else if Button = TMouseButton.mbRight then
-      OnRightMouseButtonClick(Sender);
+      else if Button = TMouseButton.mbRight then
+         OnRightMouseButtonClick(Sender);
+   end;
+
+   FbLongTap := False;
 end;
 
 procedure TDemineur.OnEmptyButtonClick(mbEmpty : TMineButton);
@@ -487,7 +524,13 @@ begin
    // affichage de toutes les mines de la partie
    for iCount := 0 to FListMineButton.Count - 1 do
       if FListMineButton[iCount].bMine then
-         FListMineButton[iCount].StyleLookup := 'StyleMineButton';
+      begin
+         {$IF Defined(ANDROID) or Defined(IOS)}
+            FListMineButton[iCount].Text := 'M';
+         {$ELSE}
+            FListMineButton[iCount].StyleLookup := 'StyleMineButton';
+         {$ENDIF}
+         end;
 
    // arrêt du chronomètre
    FTimer.Enabled  := False;
