@@ -371,7 +371,7 @@ begin
       lvHard:
       begin
          FiWidth  := 16;
-         FiHeight := 22;
+         FiHeight := 20;
          FiMines  := 45;
       end;
    end;
